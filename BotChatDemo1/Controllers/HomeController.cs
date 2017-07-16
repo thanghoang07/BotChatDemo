@@ -25,9 +25,22 @@ namespace BotChatDemo1.Controllers
             _KnowledgeBase = CustomSettings.Value.KnowledgeBase;
         }
 
-        public IActionResult Index()
+        public async Task<ActionResult> Index(string searchString)
         {
-            return View();
+            QnAQuery objQnAResult = new QnAQuery();
+            try
+            {
+                if (searchString != null)
+                {
+                    objQnAResult = await QueryQnABot(searchString);
+                }
+                return View(objQnAResult);
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "Error: " + ex);
+                return View(objQnAResult);
+            }
         }
 
         public IActionResult About()
@@ -47,6 +60,36 @@ namespace BotChatDemo1.Controllers
         public IActionResult Error()
         {
             return View();
+        }
+
+        private static async Task<QnAQuery> QueryQnABot(string Query)
+        {
+            QnAQuery QnAQueryResult = new QnAQuery();
+            using (System.Net.Http.HttpClient client =
+                new System.Net.Http.HttpClient())
+            {
+                string RequestURI = String.Format("{0}{1}{2}{3}{4}",
+                    @"https://westus.api.cognitive.microsoft.com/",
+                    @"qnamaker/v1.0/",
+                    @"knowledgebases/",
+                    _KnowledgeBase,
+                    @"/generateAnswer");
+                var httpContent =
+                    new StringContent($"{{\"question\": \"{Query}\"}}",
+                    Encoding.UTF8, "application/json");
+                httpContent.Headers.Add(
+                    "Ocp-Apim-Subscription-Key", _OcpApimSubscriptionKey);
+                System.Net.Http.HttpResponseMessage msg =
+                    await client.PostAsync(RequestURI, httpContent);
+                if (msg.IsSuccessStatusCode)
+                {
+                    var JsonDataResponse =
+                        await msg.Content.ReadAsStringAsync();
+                    QnAQueryResult =
+                        JsonConvert.DeserializeObject<QnAQuery>(JsonDataResponse);
+                }
+            }
+            return QnAQueryResult;
         }
     }
 }
