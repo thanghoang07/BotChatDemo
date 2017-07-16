@@ -57,6 +57,13 @@ namespace BotChatDemo1.Controllers
             return View();
         }
 
+        public IActionResult Hello()
+        {
+            ViewData["Message"] = "Your hello page.";
+
+            return View();
+        }
+
         public IActionResult Error()
         {
             return View();
@@ -79,12 +86,14 @@ namespace BotChatDemo1.Controllers
                     Encoding.UTF8, "application/json");
                 httpContent.Headers.Add(
                     "Ocp-Apim-Subscription-Key", _OcpApimSubscriptionKey);
+                //
                 System.Net.Http.HttpResponseMessage msg =
-                    await client.PostAsync(RequestURI, httpContent);
+                    await  client.PostAsync(RequestURI, httpContent);
+                //
                 if (msg.IsSuccessStatusCode)
                 {
                     var JsonDataResponse =
-                        await msg.Content.ReadAsStringAsync();
+                        await  msg.Content.ReadAsStringAsync();
                     QnAQueryResult =
                         JsonConvert.DeserializeObject<QnAQuery>(JsonDataResponse);
                 }
